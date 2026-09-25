@@ -1,0 +1,7 @@
+{
+  "name": "Sendaway - Automated Job Application & Tracking Dashboard",
+  "description": "Upload your resume, connect job accounts, automatically match and apply for open positions, and track every application with automated follow-ups and interview notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
