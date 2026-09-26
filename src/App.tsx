@@ -36,15 +36,46 @@ import { ToastContainer, ToastMessage } from './components/Toast';
 
 const STORAGE_PREFIX = 'sendaway_clean_v1_';
 
-// Ensure everything is completely removed and pristine for user testing
-if (typeof window !== 'undefined' && !localStorage.getItem(`${STORAGE_PREFIX}initialized`)) {
+const safeStorage = {
+  get<T>(key: string, defaultValue: T): T {
+    try {
+      if (typeof window === 'undefined') return defaultValue;
+      const item = localStorage.getItem(key);
+      if (!item) return defaultValue;
+      return JSON.parse(item) as T;
+    } catch {
+      return defaultValue;
+    }
+  },
+  set(key: string, value: unknown): void {
+    try {
+      if (typeof window === 'undefined') return;
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // quota or security error
+    }
+  },
+  clear(): void {
+    try {
+      if (typeof window === 'undefined') return;
+      localStorage.clear();
+    } catch {
+      // ignore
+    }
+  }
+};
+
+// Safe storage initialization
+if (typeof window !== 'undefined') {
   try {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('sendaway_')) {
-        localStorage.removeItem(key);
-      }
-    });
-    localStorage.setItem(`${STORAGE_PREFIX}initialized`, 'true');
+    if (!localStorage.getItem(`${STORAGE_PREFIX}initialized`)) {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('sendaway_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.setItem(`${STORAGE_PREFIX}initialized`, 'true');
+    }
   } catch {
     // ignore
   }
@@ -52,35 +83,12 @@ if (typeof window !== 'undefined' && !localStorage.getItem(`${STORAGE_PREFIX}ini
 
 export default function App() {
   // Persistent state initialized from localStorage or clean defaults
-  const [profile, setProfile] = useState<CandidateProfile>(() => {
-    const saved = localStorage.getItem(`${STORAGE_PREFIX}profile`);
-    return saved ? JSON.parse(saved) : INITIAL_PROFILE;
-  });
-
-  const [accounts, setAccounts] = useState<ConnectedAccount[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_PREFIX}accounts`);
-    return saved ? JSON.parse(saved) : INITIAL_ACCOUNTS;
-  });
-
-  const [filterConfig, setFilterConfig] = useState<JobFilterConfig>(() => {
-    const saved = localStorage.getItem(`${STORAGE_PREFIX}filters`);
-    return saved ? JSON.parse(saved) : INITIAL_FILTER_CONFIG;
-  });
-
-  const [applications, setApplications] = useState<JobApplication[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_PREFIX}applications`);
-    return saved ? JSON.parse(saved) : INITIAL_APPLICATIONS;
-  });
-
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_PREFIX}notifications`);
-    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
-  });
-
-  const [dispatchLogs, setDispatchLogs] = useState<DispatchLogEntry[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_PREFIX}logs`);
-    return saved ? JSON.parse(saved) : INITIAL_DISPATCH_LOGS;
-  });
+  const [profile, setProfile] = useState<CandidateProfile>(() => safeStorage.get(`${STORAGE_PREFIX}profile`, INITIAL_PROFILE));
+  const [accounts, setAccounts] = useState<ConnectedAccount[]>(() => safeStorage.get(`${STORAGE_PREFIX}accounts`, INITIAL_ACCOUNTS));
+  const [filterConfig, setFilterConfig] = useState<JobFilterConfig>(() => safeStorage.get(`${STORAGE_PREFIX}filters`, INITIAL_FILTER_CONFIG));
+  const [applications, setApplications] = useState<JobApplication[]>(() => safeStorage.get(`${STORAGE_PREFIX}applications`, INITIAL_APPLICATIONS));
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => safeStorage.get(`${STORAGE_PREFIX}notifications`, INITIAL_NOTIFICATIONS));
+  const [dispatchLogs, setDispatchLogs] = useState<DispatchLogEntry[]>(() => safeStorage.get(`${STORAGE_PREFIX}logs`, INITIAL_DISPATCH_LOGS));
 
   const [autoApplyActive, setAutoApplyActive] = useState(true);
   const [currentView, setCurrentView] = useState<'table' | 'kanban' | 'analytics' | 'logs'>('table');
@@ -100,29 +108,29 @@ export default function App() {
   // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  // Sync state to localStorage
+  // Sync state to storage safely
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_PREFIX}profile`, JSON.stringify(profile));
+    safeStorage.set(`${STORAGE_PREFIX}profile`, profile);
   }, [profile]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_PREFIX}accounts`, JSON.stringify(accounts));
+    safeStorage.set(`${STORAGE_PREFIX}accounts`, accounts);
   }, [accounts]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_PREFIX}filters`, JSON.stringify(filterConfig));
+    safeStorage.set(`${STORAGE_PREFIX}filters`, filterConfig);
   }, [filterConfig]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_PREFIX}applications`, JSON.stringify(applications));
+    safeStorage.set(`${STORAGE_PREFIX}applications`, applications);
   }, [applications]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_PREFIX}notifications`, JSON.stringify(notifications));
+    safeStorage.set(`${STORAGE_PREFIX}notifications`, notifications);
   }, [notifications]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_PREFIX}logs`, JSON.stringify(dispatchLogs));
+    safeStorage.set(`${STORAGE_PREFIX}logs`, dispatchLogs);
   }, [dispatchLogs]);
 
   const showToast = (title: string, message?: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -141,7 +149,7 @@ export default function App() {
       setApplications([]);
       setNotifications([]);
       setDispatchLogs([]);
-      localStorage.clear();
+      safeStorage.clear();
       showToast('All Cleared', 'Sendaway is completely reset to a clean slate', 'info');
     }
   };

@@ -1,12 +1,19 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import {defineConfig, Plugin} from 'vite';
+
+const cleanGhRedirectPlugin: Plugin = {
+  name: 'remove-gh-redirect-in-build',
+  transformIndexHtml(html) {
+    return html.replace(/<script id="gh-pages-root-redirect">[\s\S]*?<\/script>/, '');
+  },
+};
 
 export default defineConfig(() => {
   return {
     base: './',
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), cleanGhRedirectPlugin],
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname || '.', '.'),

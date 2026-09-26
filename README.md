@@ -46,11 +46,19 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ## 🌐 Deploying to GitHub Pages, Vercel, or Netlify
 
-### A. Deploy to GitHub Pages (Automated via GitHub Actions)
-1. Push this repository to GitHub.
-2. In your GitHub repository, go to **Settings** → **Pages**.
-3. Under **Build and deployment** → **Source**, select **GitHub Actions**.
-4. The included workflow `.github/workflows/deploy.yml` will automatically build and publish your site!
+### A. Deploy to GitHub Pages (2 Super Easy Options)
+
+#### Option 1: Deploy from Branch (Recommended & Instant, No Actions setup required!)
+1. In your GitHub repository, go to **Settings** → **Pages**.
+2. Under **Build and deployment** → **Source**, keep or select **Deploy from a branch**.
+3. Under **Branch**:
+   - Select **`main`** (or `master`).
+   - Select **`/docs`** from the folder dropdown (Sendaway's `docs/` folder contains the ready-to-run pre-compiled production build).
+4. Click **Save**. Your site will be live at `https://<your-username>.github.io/<repo-name>/` in ~30 seconds with 0 configuration!
+
+#### Option 2: Deploy via GitHub Actions
+1. In **Settings** → **Pages**, change **Source** to **GitHub Actions**.
+2. The included `.github/workflows/deploy.yml` workflow will automatically run on every push, build the app, and deploy it to GitHub Pages.
 
 ### B. Deploy to Vercel
 1. Import this repository in [Vercel](https://vercel.com).
